@@ -1,0 +1,17 @@
+{
+  "name": "autoforms",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Automatizacion controlada para links publicos de respuesta de Google Forms.",
+  "type": "commonjs",
+  "scripts": {
+    "public-form": "node src/public-form-runner.js",
+    "dry-run": "node src/public-form-runner.js config/public-forms.local.json mi_formulario",
+    "submit": "node src/public-form-runner.js config/public-forms.local.json mi_formulario --submit",
+    "submit:headless": "node src/public-form-runner.js config/public-forms.local.json mi_formulario --submit --headless",
+    "check": "node --check src/public-form-runner.js"
+  },
+  "dependencies": {
+    "playwright": "^1.44.0"
+  }
+}
