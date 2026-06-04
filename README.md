@@ -180,7 +180,7 @@ Para campos donde escribes texto:
 {
   "title": "Nombre completo",
   "type": "text",
-  "value": "Sebastián Chacón"
+  "value": "Sebastián Calvo"
 }
 ```
 
@@ -336,7 +336,7 @@ Este modo es bueno para probar el día antes o unos minutos antes.
 
 ## 12. Esperar y enviar automáticamente
 
-Si el reglamento permite automatizaciones y ya probaste que todo funciona:
+Si ya probaste que todo funciona:
 
 ```powershell
 npm run wait-submit
