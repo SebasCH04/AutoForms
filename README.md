@@ -1,87 +1,101 @@
 # AutoForms
 
-AutoForms rellena un Google Form usando su link publico de respuesta, por ejemplo:
+AutoForms es un asistente para rellenar y enviar un **Microsoft Forms** de forma rápida usando Playwright.
 
-```text
-https://docs.google.com/forms/d/e/1FAIpQL.../viewform
-```
+Está pensado para casos donde tienes permiso para usar automatización, por ejemplo, un formulario de cupos de la universidad donde el reglamento permite automatizar el proceso.
 
-El proyecto usa Playwright para abrir Chromium, encontrar las preguntas por titulo, escribir o seleccionar respuestas y, si tu lo confirmas con `--submit`, enviar el formulario.
+El programa puede:
 
-Usalo solo con formularios propios o con permiso explicito para enviar respuestas.
+- Abrir un enlace de Microsoft Forms.
+- Esperar hasta que el formulario acepte respuestas.
+- Rellenar los campos que configures.
+- Enviar automáticamente si usas el comando de envío.
+- Ejecutarse con ventana visible para revisar lo que hace, o en modo invisible si ya lo probaste.
 
-## Que hace
+No está hecho para saltarse restricciones, CAPTCHAs, inicios de sesión, permisos o reglas del formulario.
 
-- Abre un link publico de Google Forms.
-- Rellena preguntas configuradas en un archivo JSON.
-- Permite probar primero sin enviar.
-- Envia solo cuando agregas `--submit`.
-- Guarda un historial local para no enviar dos veces la misma configuracion si `once` esta en `true`.
-
-## Requisitos
+## 1. Requisitos
 
 Necesitas tener instalado:
 
-- Node.js 18 o superior.
-- npm.
-- Acceso a internet para instalar dependencias y abrir el Form.
+- **Node.js 18 o superior**
+- **npm**
+- Internet
+- El enlace del Microsoft Forms
 
-Para revisar tu version de Node:
+Para revisar si tienes Node instalado, abre una terminal y ejecuta:
 
 ```powershell
 node --version
 ```
 
-Si no tienes Node instalado, descargalo desde:
+Si aparece algo como `v18`, `v20`, `v22` o superior, estás bien.
+
+Si no aparece nada o da error, instala Node.js desde:
 
 ```text
 https://nodejs.org/
 ```
 
-## Instalacion
+## 2. Abrir la terminal correcta
 
-Desde la raiz del repositorio:
+Abre una terminal en la carpeta del proyecto.
+
+Si usas VS Code:
+
+1. Abre este repositorio.
+2. Ve a `Terminal > New Terminal`.
+3. Revisa que la terminal diga algo parecido a:
+
+```powershell
+C:\Users\sebas\Documents\GitHub\AutoForms>
+```
+
+Todos los comandos de esta guía se ejecutan desde esa carpeta.
+
+## 3. Instalar el proyecto
+
+Ejecuta:
 
 ```powershell
 npm install
 ```
 
-Luego instala el navegador Chromium que usa Playwright:
+Luego instala el navegador que usa Playwright:
 
 ```powershell
 npx playwright install chromium
 ```
 
-Esto solo se hace una vez por maquina.
+Esto se hace una sola vez por computadora.
 
-## Crear tu configuracion local
+## 4. Configurar tus datos
 
-No edites directamente el archivo de ejemplo si vas a poner datos reales. Copialo:
+El archivo que debes editar es:
 
-```powershell
-Copy-Item config\public-forms.example.json config\public-forms.local.json
+```text
+config/microsoft-forms.local.json
 ```
 
-El archivo `config/public-forms.local.json` esta ignorado por Git, asi que puedes poner ahi tus respuestas sin subirlas al repo.
+Ese archivo contiene:
 
-## Configurar un formulario
+- El enlace del formulario.
+- Los campos que se van a rellenar.
+- Tus respuestas.
 
-Abre `config/public-forms.local.json`.
-
-La estructura es:
+Ejemplo simple:
 
 ```json
 {
   "forms": [
     {
-      "key": "mi_formulario",
-      "url": "https://docs.google.com/forms/d/e/1FAIpQL.../viewform?usp=preview",
-      "once": true,
+      "key": "piscina",
+      "url": "https://forms.cloud.microsoft/r/3CZBvVq9uL",
       "answers": [
         {
           "title": "Nombre completo",
           "type": "text",
-          "value": "Ada Lovelace"
+          "value": "TU_NOMBRE_COMPLETO"
         }
       ]
     }
@@ -89,240 +103,428 @@ La estructura es:
 }
 ```
 
-Campos principales:
+## 5. Qué significa cada parte
 
-| Campo | Uso |
-| --- | --- |
-| `key` | Nombre interno para ejecutar ese Form desde la terminal. |
-| `url` | Link publico de respuesta, el que termina en `/viewform`. |
-| `once` | Si es `true`, no vuelve a enviar la misma configuracion despues de un envio exitoso. |
-| `answers` | Lista de preguntas que quieres rellenar. |
+### `key`
 
-Cada respuesta usa:
+Es el nombre interno del formulario.
 
-| Campo | Uso |
-| --- | --- |
-| `title` | Titulo visible de la pregunta en Google Forms. |
-| `type` | Tipo de pregunta: `text`, `paragraph`, `radio`, `scale`, `checkbox` o `dropdown`. |
-| `value` | Respuesta que se escribira o seleccionara. |
+Para este proyecto usamos:
 
-El `title` debe coincidir con el texto de la pregunta. No necesita incluir el asterisco de requerido.
+```json
+"key": "piscina"
+```
 
-## Tipos de pregunta soportados
+No necesitas cambiarlo si solo vas a usar este formulario.
 
-Por ahora el runner cubre los tipos mas comunes. Preguntas como subir archivos, tablas/cuadriculas, fecha u hora no estan implementadas todavia.
+### `url`
+
+Es el enlace del Microsoft Forms.
+
+Sirven enlaces como estos:
+
+```text
+https://forms.cloud.microsoft/r/XXXXXXXXXX
+https://forms.cloud.microsoft/Pages/ResponsePage.aspx?id=XXXXXXXXXX
+https://forms.office.com/r/XXXXXXXXXX
+https://forms.microsoft.com/r/XXXXXXXXXX
+```
+
+### `answers`
+
+Es la lista de preguntas que AutoForms debe rellenar.
+
+Cada pregunta tiene:
+
+```json
+{
+  "title": "Texto de la pregunta",
+  "type": "tipo_de_pregunta",
+  "value": "respuesta"
+}
+```
+
+## 6. Cómo copiar bien una pregunta
+
+En `title`, escribe el texto visible de la pregunta.
+
+No tienes que poner el número de pregunta ni el asterisco rojo.
+
+Por ejemplo, si Microsoft Forms muestra:
+
+```text
+2. Nombre completo *
+```
+
+En el JSON puedes poner:
+
+```json
+"title": "Nombre completo"
+```
+
+Si la pregunta es muy larga, puedes poner solo una parte suficientemente única:
+
+```json
+"title": "El presente formulario consta de diez ítems en total"
+```
+
+AutoForms busca una pregunta que contenga ese texto.
+
+## 7. Tipos de preguntas
 
 ### Texto corto
+
+Para campos donde escribes texto:
 
 ```json
 {
   "title": "Nombre completo",
   "type": "text",
-  "value": "Ada Lovelace"
+  "value": "Sebastián Chacón"
 }
 ```
 
-### Parrafo
+### Párrafo
+
+Para campos largos:
 
 ```json
 {
-  "title": "Comentarios",
+  "title": "Observaciones",
   "type": "paragraph",
-  "value": "Respuesta de prueba"
+  "value": "Sin observaciones"
 }
 ```
 
-### Opcion multiple
+### Opción única
+
+Para opciones tipo círculo donde solo puedes escoger una:
 
 ```json
 {
-  "title": "Categoria",
+  "title": "Seleccione la opción que le identifica",
   "type": "radio",
-  "value": "General"
+  "value": "Persona Estudiante"
 }
 ```
 
-El `value` debe coincidir con una opcion del Form.
+El `value` debe ser igual al texto de la opción.
 
-### Escala lineal
+### Casillas
 
-Para preguntas como `Minimo 1 2 3 4 5 Maximo`:
+Para opciones donde puedes marcar varias:
 
 ```json
 {
-  "title": "Creo que me gustaria utilizar este sistema frecuentemente.",
+  "title": "Días disponibles",
+  "type": "checkbox",
+  "value": ["Lunes", "Miércoles"]
+}
+```
+
+### Desplegable
+
+Para listas desplegables:
+
+```json
+{
+  "title": "Sede",
+  "type": "dropdown",
+  "value": "Cartago"
+}
+```
+
+### Escala
+
+Para escalas numéricas:
+
+```json
+{
+  "title": "Prioridad",
   "type": "scale",
   "value": "5"
 }
 ```
 
-El `value` debe ser el numero que quieres seleccionar.
+## 8. Reglas importantes del JSON
 
-### Casillas
+El archivo debe ser JSON válido.
 
-Puedes usar una lista:
+Reglas sencillas:
 
-```json
-{
-  "title": "Servicios",
-  "type": "checkbox",
-  "value": ["Diseno", "Soporte"]
-}
-```
+- Usa comillas dobles `"`.
+- Cada campo lleva dos puntos `:`.
+- Las respuestas van separadas por comas.
+- No pongas coma después del último elemento de una lista.
+- No borres las llaves `{}` ni los corchetes `[]`.
 
-O texto separado por comas:
+Correcto:
 
 ```json
 {
-  "title": "Servicios",
-  "type": "checkbox",
-  "value": "Diseno, Soporte"
+  "title": "Nombre completo",
+  "type": "text",
+  "value": "Sebastián"
 }
 ```
 
-### Lista desplegable
+Incorrecto:
 
 ```json
 {
-  "title": "Pais",
-  "type": "dropdown",
-  "value": "Costa Rica"
+  title: Nombre completo,
+  type: text,
+  value: Sebastian,
 }
 ```
 
-## Probar sin enviar
-
-Primero ejecuta sin `--submit`:
+Para revisar si el JSON está bien:
 
 ```powershell
-npm run dry-run
+node -e "JSON.parse(require('fs').readFileSync('config/microsoft-forms.local.json','utf8')); console.log('JSON OK')"
 ```
 
-Esto abre Chromium visible, entra al Form y rellena los campos. No presiona el boton de enviar.
+## 9. Probar sin enviar
 
-La terminal queda esperando. Cuando termines de revisar la ventana, presiona Enter en la terminal para cerrar Chromium.
+Antes de usar envío automático, prueba que todo se rellena bien.
 
-Usa esta prueba para revisar:
-
-- Que el link abre correctamente.
-- Que los titulos de preguntas coinciden.
-- Que las opciones existen.
-- Que no falta una pregunta requerida.
-
-## Enviar el formulario
-
-Cuando ya verificaste que se rellena bien, ejecuta:
+Ejecuta:
 
 ```powershell
-npm run submit
+npm run ready
 ```
 
-Con `--submit`, el script presiona el boton `Enviar` o `Submit`.
+Esto hace lo siguiente:
 
-Despues de un envio exitoso, guarda un registro en:
+1. Abre Chromium.
+2. Abre el formulario.
+3. Rellena los campos.
+4. No envía.
+5. Espera a que revises.
+
+Cuando termines de revisar la ventana, vuelve a la terminal y presiona Enter para cerrar Chromium.
+
+## 10. Enviar si el formulario ya está abierto
+
+Si el formulario ya acepta respuestas y quieres rellenar y enviar:
+
+```powershell
+npm run ready-submit
+```
+
+Úsalo solo después de confirmar con `npm run ready` que todo se rellena correctamente.
+
+## 11. Esperar a que el formulario abra
+
+Si el formulario todavía no acepta respuestas, usa:
+
+```powershell
+npm run wait
+```
+
+Esto:
+
+1. Abre el enlace.
+2. Revisa si ya aparecen las preguntas.
+3. Si no aparecen, espera.
+4. Refresca.
+5. Repite hasta que el formulario abra.
+6. Cuando abre, rellena los campos.
+7. No envía automáticamente.
+
+Este modo es bueno para probar el día antes o unos minutos antes.
+
+## 12. Esperar y enviar automáticamente
+
+Si el reglamento permite automatizaciones y ya probaste que todo funciona:
+
+```powershell
+npm run wait-submit
+```
+
+Esto:
+
+1. Abre el formulario.
+2. Refresca hasta que acepte respuestas.
+3. Rellena todo.
+4. Presiona `Enviar`.
+
+## 13. Modo rápido para el día real
+
+El modo normal revisa cada 1 segundo.
+
+Para revisar más rápido, cada 250 ms:
+
+```powershell
+npm run wait-submit:fast
+```
+
+Este es el comando recomendado para el momento real si ya hiciste pruebas antes.
+
+Si quieres esperar rápido pero enviar manualmente:
+
+```powershell
+npm run wait:fast
+```
+
+## 14. Modo invisible
+
+Si no quieres que se vea la ventana del navegador:
+
+```powershell
+npm run wait-submit:headless
+```
+
+No lo uses en la primera prueba. Primero verifica con ventana visible.
+
+## 15. Orden recomendado para usarlo
+
+### La primera vez
+
+1. Instala dependencias:
+
+```powershell
+npm install
+npx playwright install chromium
+```
+
+2. Edita tus datos en:
 
 ```text
-data/public-form-submissions.json
+config/microsoft-forms.local.json
 ```
 
-Ese archivo evita reenviar la misma configuracion cuando `once` esta en `true`.
-
-## Ejecutar en modo invisible
-
-Si ya probaste y quieres que no se abra la ventana del navegador:
-
-```powershell
-npm run submit:headless
-```
-
-Para la primera prueba recomiendo no usar `--headless`, porque es mejor ver que se rellena bien.
-
-## Evitar envios duplicados
-
-Si `once` esta en `true`, AutoForms calcula una huella usando:
-
-- `key`
-- `url`
-- `answers`
-
-Si esa misma huella ya fue enviada, no la vuelve a enviar.
-
-Si cambias una respuesta, la huella cambia y se considera una configuracion nueva.
-
-## Repetir una prueba enviada
-
-Si necesitas repetir manualmente una prueba, tienes dos opciones:
-
-1. Cambiar `once` a `false`.
-2. Borrar `data/public-form-submissions.json`.
-
-Ten cuidado con esto porque puede duplicar respuestas reales.
-
-## Varios formularios
-
-Puedes agregar varios objetos dentro de `forms`:
-
-```json
-{
-  "forms": [
-    {
-      "key": "encuesta_clientes",
-      "url": "https://docs.google.com/forms/d/e/FORM_1/viewform",
-      "once": true,
-      "answers": []
-    },
-    {
-      "key": "registro_evento",
-      "url": "https://docs.google.com/forms/d/e/FORM_2/viewform",
-      "once": true,
-      "answers": []
-    }
-  ]
-}
-```
-
-Luego eliges cual correr con `--form`:
-
-```powershell
-npm run public-form -- --config config/public-forms.local.json --form registro_evento
-```
-
-Si PowerShell o npm se comen las banderas, tambien puedes ejecutar Node directamente:
-
-```powershell
-node src/public-form-runner.js config/public-forms.local.json registro_evento
-node src/public-form-runner.js config/public-forms.local.json registro_evento --submit
-```
-
-## Errores comunes
-
-### No encontre la pregunta
-
-El `title` no coincide con el titulo visible del Form. Copia el texto exacto de la pregunta.
-
-### No encuentra una opcion
-
-En `radio`, `checkbox` o `dropdown`, el `value` debe coincidir con una opcion visible del Form.
-
-### El formulario pide iniciar sesion
-
-Algunos Forms requieren cuenta de Google, restringen dominios o limitan a una respuesta por usuario. En ese caso tendrias que iniciar sesion manualmente en el navegador o pedir acceso al formulario.
-
-### El Form tiene CAPTCHA o protecciones extra
-
-No automatices protecciones anti-abuso. Usa este proyecto solo donde tengas permiso.
-
-## Scripts disponibles
-
-Validar sintaxis:
+3. Valida el proyecto:
 
 ```powershell
 npm run check
 ```
 
-Rellenar o enviar un Form:
+4. Prueba sin enviar:
 
 ```powershell
-npm run dry-run
-npm run submit
+npm run ready
+```
+
+### El día del formulario
+
+1. Abre VS Code.
+2. Abre la terminal en el proyecto.
+3. Unos minutos antes de la hora, ejecuta:
+
+```powershell
+npm run wait-submit:fast
+```
+
+## 16. Si el formulario pide iniciar sesión
+
+Algunos Microsoft Forms piden cuenta institucional.
+
+Si pasa eso:
+
+1. Ejecuta `npm run wait` o `npm run wait-submit:fast`.
+2. Cuando se abra Chromium, inicia sesión manualmente.
+3. Deja la ventana abierta.
+4. El script seguirá esperando/refrescando en esa misma sesión.
+
+No intentes saltarte el inicio de sesión.
+
+## 17. Si algo falla
+
+### Dice `No encontré la pregunta`
+
+El texto de `title` no coincide.
+
+Solución:
+
+- Abre el formulario.
+- Copia una parte única del texto de la pregunta.
+- Pégala en `title`.
+
+### No selecciona una opción
+
+El texto de `value` no coincide con la opción visible.
+
+Solución:
+
+- Copia el texto exacto de la opción.
+- Pégalo en `value`.
+
+### El formulario no abre todavía
+
+Usa:
+
+```powershell
+npm run wait
+```
+
+o:
+
+```powershell
+npm run wait-submit:fast
+```
+
+### `npm install` falla
+
+Revisa que tengas internet y Node instalado.
+
+También puedes revisar:
+
+```powershell
+node --version
+npm --version
+```
+
+### Chromium no abre
+
+Ejecuta otra vez:
+
+```powershell
+npx playwright install chromium
+```
+
+## 18. Comandos disponibles
+
+| Comando | Qué hace |
+| --- | --- |
+| `npm run check` | Revisa que el código tenga sintaxis válida. |
+| `npm run ready` | Rellena el formulario si ya está abierto, sin enviar. |
+| `npm run ready-submit` | Rellena y envía si ya está abierto. |
+| `npm run wait` | Espera a que abra, rellena y deja envío manual. |
+| `npm run wait:fast` | Igual que `wait`, pero revisa cada 250 ms. |
+| `npm run wait-submit` | Espera a que abra, rellena y envía. |
+| `npm run wait-submit:fast` | Igual que `wait-submit`, pero revisa cada 250 ms. |
+| `npm run wait-submit:headless` | Espera, rellena y envía sin mostrar navegador. |
+
+## 19. Comando avanzado
+
+También puedes llamar el script directamente:
+
+```powershell
+node src/microsoft-form-runner.js config/microsoft-forms.local.json piscina --wait --submit --poll-ms 250
+```
+
+Opciones:
+
+| Opción | Qué hace |
+| --- | --- |
+| `--wait` | Espera/refresca hasta que el formulario acepte respuestas. |
+| `--submit` | Presiona `Enviar` después de rellenar. |
+| `--poll-ms 250` | Cambia cada cuánto revisa si ya abrió. |
+| `--timeout-ms 600000` | Tiempo máximo de espera en milisegundos. |
+| `--headless` | Ejecuta sin ventana visible. |
+
+## 20. Seguridad y buen uso
+
+Usa AutoForms solo si:
+
+- Tienes permiso para responder el formulario.
+- El reglamento permite automatizaciones.
+- No estás intentando saltarte restricciones técnicas.
+- Tus datos en `microsoft-forms.local.json` son correctos.
+
+Antes de usar envío automático, haz siempre una prueba con:
+
+```powershell
+npm run ready
 ```

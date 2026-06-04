@@ -1,0 +1,25 @@
+{
+  "forms": [
+    {
+      "key": "piscina",
+      "url": "https://forms.cloud.microsoft/r/PEGA_AQUI_TU_LINK",
+      "answers": [
+        {
+          "title": "Nombre completo",
+          "type": "text",
+          "value": "Tu nombre"
+        },
+        {
+          "title": "Carnet",
+          "type": "text",
+          "value": "Tu carnet"
+        },
+        {
+          "title": "Horario",
+          "type": "radio",
+          "value": "9:30 am"
+        }
+      ]
+    }
+  ]
+}
