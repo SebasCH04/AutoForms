@@ -1,0 +1,65 @@
+name: Run AutoForms
+
+on:
+  workflow_dispatch:
+    inputs:
+      form_key:
+        description: "Nombre interno del formulario configurado"
+        required: true
+        default: "piscina"
+      poll_ms:
+        description: "Tiempo entre intentos en milisegundos"
+        required: true
+        default: "250"
+      timeout_ms:
+        description: "Tiempo máximo de espera en milisegundos"
+        required: true
+        default: "600000"
+
+jobs:
+  run-autoforms:
+    name: Wait, fill, and submit Microsoft Forms
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Create local form config from secret
+        env:
+          MICROSOFT_FORMS_CONFIG_JSON: ${{ secrets.MICROSOFT_FORMS_CONFIG_JSON }}
+        run: |
+          if [ -z "$MICROSOFT_FORMS_CONFIG_JSON" ]; then
+            echo "Missing secret: MICROSOFT_FORMS_CONFIG_JSON"
+            exit 1
+          fi
+
+          mkdir -p config
+          printf '%s' "$MICROSOFT_FORMS_CONFIG_JSON" > config/microsoft-forms.local.json
+
+      - name: Validate form config JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('config/microsoft-forms.local.json','utf8')); console.log('JSON OK')"
+
+      - name: Run AutoForms
+        run: >
+          node src/microsoft-form-runner.js
+          config/microsoft-forms.local.json
+          "${{ inputs.form_key }}"
+          --wait
+          --submit
+          --headless
+          --poll-ms "${{ inputs.poll_ms }}"
+          --timeout-ms "${{ inputs.timeout_ms }}"

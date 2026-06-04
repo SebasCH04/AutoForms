@@ -48,8 +48,8 @@ async function main() {
     }
 
     await scrollSubmitButtonIntoView_(page);
-    console.log('Formulario rellenado. Revisa los campos y envia manualmente desde la ventana.');
-    console.log('Presiona Enter aqui para cerrar Chromium cuando termines.');
+    console.log('Formulario rellenado. Revisa los campos y envía manualmente desde la ventana.');
+    console.log('Presiona Enter aquí para cerrar Chromium cuando termines.');
     await waitForEnter_();
   } finally {
     await browser.close();
@@ -67,7 +67,7 @@ async function waitUntilFormAcceptsResponses_(page, formConfig, pollMs, timeoutM
 
   while (Date.now() - startedAt < timeoutMs) {
     if (await pageLooksFillable_(page, formConfig.answers || [])) {
-      console.log(`Formulario disponible despues de ${attempt} intento(s).`);
+      console.log(`Formulario disponible después de ${attempt} intento(s).`);
       return;
     }
 
@@ -237,7 +237,7 @@ async function submitForm_(page) {
   ].some((text) => bodyText.includes(text));
 
   if (!looksSubmitted) {
-    console.log('No pude confirmar el mensaje final, pero el boton de envio fue presionado.');
+    console.log('No pude confirmar el mensaje final, pero el botón de envío fue presionado.');
   }
 }
 

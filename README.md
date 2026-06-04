@@ -377,7 +377,144 @@ npm run wait-submit:headless
 
 No lo uses en la primera prueba. Primero verifica con ventana visible.
 
-## 15. Orden recomendado para usarlo
+## 15. Usarlo desde iPhone
+
+El iPhone no puede ejecutar Playwright y Chromium como una computadora normal. La forma recomendada es usar el iPhone como **control remoto** y dejar que GitHub Actions ejecute AutoForms en la nube.
+
+Esto permite entrar a GitHub desde Safari o desde la app de GitHub en el iPhone y presionar un botón para correr el bot.
+
+### Qué necesitas
+
+- Tener este repositorio subido a GitHub.
+- Tener GitHub Actions habilitado.
+- Guardar tu configuración como un secret de GitHub.
+- Usar el workflow llamado `Run AutoForms`.
+
+### Paso 1: Subir el repositorio a GitHub
+
+Si todavía no lo subiste, crea un repositorio en GitHub y sube este proyecto.
+
+No subas tus datos personales directamente al repositorio.
+
+El archivo:
+
+```text
+config/microsoft-forms.local.json
+```
+
+está ignorado por Git para proteger tus datos.
+
+### Paso 2: Crear el secret con tu configuración
+
+En GitHub, abre tu repositorio y ve a:
+
+```text
+Settings > Secrets and variables > Actions > New repository secret
+```
+
+Crea un secret con este nombre exacto:
+
+```text
+MICROSOFT_FORMS_CONFIG_JSON
+```
+
+En el valor del secret, pega todo el contenido de:
+
+```text
+config/microsoft-forms.local.json
+```
+
+Debe verse como un JSON completo, por ejemplo:
+
+```json
+{
+  "forms": [
+    {
+      "key": "piscina",
+      "url": "https://forms.cloud.microsoft/r/3CZBvVq9uL",
+      "answers": []
+    }
+  ]
+}
+```
+
+Guarda el secret.
+
+### Paso 3: Ejecutarlo desde el iPhone
+
+Desde el iPhone:
+
+1. Abre GitHub en Safari o en la app de GitHub.
+2. Entra a tu repositorio.
+3. Ve a `Actions`.
+4. Selecciona `Run AutoForms`.
+5. Presiona `Run workflow`.
+6. Revisa estos valores:
+
+```text
+form_key: piscina
+poll_ms: 250
+timeout_ms: 600000
+```
+
+7. Presiona el botón verde para iniciar.
+
+GitHub Actions ejecutará:
+
+```powershell
+node src/microsoft-form-runner.js config/microsoft-forms.local.json piscina --wait --submit --headless --poll-ms 250 --timeout-ms 600000
+```
+
+### Qué significan esos valores
+
+| Valor | Significado |
+| --- | --- |
+| `form_key` | El formulario que quieres correr. Normalmente es `piscina`. |
+| `poll_ms` | Cada cuánto revisa si el formulario abrió. `250` significa cada 250 ms. |
+| `timeout_ms` | Cuánto tiempo espera antes de rendirse. `600000` son 10 minutos. |
+
+### Cuándo iniciarlo
+
+GitHub Actions puede tardar algunos segundos en arrancar.
+
+Para un formulario que abre a las 9:30 a. m., lo recomendable es iniciar el workflow unos minutos antes, por ejemplo:
+
+```text
+9:27 a. m. o 9:28 a. m.
+```
+
+El workflow se queda esperando hasta que el formulario acepte respuestas.
+
+### Ver si funcionó
+
+En la pantalla del workflow puedes abrir los logs.
+
+Si todo salió bien, verás mensajes similares a:
+
+```text
+JSON OK
+Formulario disponible después de 3 intento(s).
+Formulario enviado.
+```
+
+### Limitaciones del modo iPhone/GitHub
+
+Este modo corre en la nube, sin ventana visible.
+
+Funciona mejor si el formulario:
+
+- No requiere iniciar sesión.
+- No tiene CAPTCHA.
+- No requiere interacción manual.
+- Usa preguntas y opciones configuradas correctamente.
+
+Si el formulario requiere iniciar sesión institucional, GitHub Actions no podrá iniciar sesión por ti. En ese caso es mejor usar la computadora con:
+
+```powershell
+npm run wait-submit:fast
+```
+
+## 16. Orden recomendado para usarlo
 
 ### La primera vez
 
@@ -416,7 +553,16 @@ npm run ready
 npm run wait-submit:fast
 ```
 
-## 16. Si el formulario pide iniciar sesión
+### Desde iPhone
+
+1. Entra a GitHub.
+2. Ve a `Actions`.
+3. Abre `Run AutoForms`.
+4. Presiona `Run workflow`.
+5. Usa `poll_ms` en `250`.
+6. Usa `timeout_ms` en `600000`.
+
+## 17. Si el formulario pide iniciar sesión
 
 Algunos Microsoft Forms piden cuenta institucional.
 
@@ -429,7 +575,7 @@ Si pasa eso:
 
 No intentes saltarte el inicio de sesión.
 
-## 17. Si algo falla
+## 18. Si algo falla
 
 ### Dice `No encontré la pregunta`
 
@@ -483,7 +629,26 @@ Ejecuta otra vez:
 npx playwright install chromium
 ```
 
-## 18. Comandos disponibles
+### En GitHub Actions dice `Missing secret`
+
+No creaste el secret o el nombre está mal escrito.
+
+El nombre debe ser exactamente:
+
+```text
+MICROSOFT_FORMS_CONFIG_JSON
+```
+
+### En GitHub Actions dice `JSON OK`, pero luego falla
+
+El JSON está bien escrito, pero puede haber un problema con:
+
+- El texto de una pregunta.
+- El texto de una opción.
+- El formulario todavía no está disponible.
+- El formulario pide iniciar sesión.
+
+## 19. Comandos disponibles
 
 | Comando | Qué hace |
 | --- | --- |
@@ -496,7 +661,7 @@ npx playwright install chromium
 | `npm run wait-submit:fast` | Igual que `wait-submit`, pero revisa cada 250 ms. |
 | `npm run wait-submit:headless` | Espera, rellena y envía sin mostrar navegador. |
 
-## 19. Comando avanzado
+## 20. Comando avanzado
 
 También puedes llamar el script directamente:
 
@@ -514,7 +679,7 @@ Opciones:
 | `--timeout-ms 600000` | Tiempo máximo de espera en milisegundos. |
 | `--headless` | Ejecuta sin ventana visible. |
 
-## 20. Seguridad y buen uso
+## 21. Seguridad y buen uso
 
 Usa AutoForms solo si:
 
