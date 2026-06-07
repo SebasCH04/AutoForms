@@ -161,7 +161,7 @@ async function findQuestion_(page, title, timeoutMs) {
     await page.waitForTimeout(150);
   }
 
-  throw new Error(`No encontre la pregunta "${title}". Revisa que el titulo sea exacto.`);
+  throw new Error(`No encontré la pregunta "${title}". Revisa que el titulo sea exacto.`);
 }
 
 function questionContainers_(page) {
@@ -237,7 +237,7 @@ async function submitForm_(page) {
   ].some((text) => bodyText.includes(text));
 
   if (!looksSubmitted) {
-    console.log('No pude confirmar el mensaje final, pero el botón de envío fue presionado.');
+    console.log('No se pudo confirmar el mensaje final, pero el botón de envío fue presionado.');
   }
 }
 
