@@ -6,6 +6,7 @@ const { chromium } = require('playwright');
 const DEFAULT_CONFIG = 'config/microsoft-forms.example.json';
 const DEFAULT_POLL_MS = 1000;
 const DEFAULT_TIMEOUT_MS = 10 * 60 * 1000;
+const START_BUTTON_PATTERN = /\b(start\s*(survey|now)?|begin|comenzar|empezar|iniciar)\b/i;
 
 async function main() {
   const args = parseArgs_(process.argv.slice(2), process.env);
@@ -59,6 +60,7 @@ async function main() {
 async function openForm_(page, url) {
   await page.goto(url, { waitUntil: 'domcontentloaded' });
   await page.waitForLoadState('networkidle').catch(() => undefined);
+  await clickStartButtonIfPresent_(page);
 }
 
 async function waitUntilFormAcceptsResponses_(page, formConfig, pollMs, timeoutMs) {
@@ -66,6 +68,8 @@ async function waitUntilFormAcceptsResponses_(page, formConfig, pollMs, timeoutM
   let attempt = 1;
 
   while (Date.now() - startedAt < timeoutMs) {
+    await clickStartButtonIfPresent_(page);
+
     if (await pageLooksFillable_(page, formConfig.answers || [])) {
       console.log(`Formulario disponible después de ${attempt} intento(s).`);
       return;
@@ -76,6 +80,7 @@ async function waitUntilFormAcceptsResponses_(page, formConfig, pollMs, timeoutM
     await page.waitForTimeout(pollMs);
     await page.reload({ waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle').catch(() => undefined);
+    await clickStartButtonIfPresent_(page);
     attempt += 1;
   }
 
@@ -97,9 +102,41 @@ async function pageLooksFillable_(page, answers) {
 }
 
 async function fillAnswers_(page, answers) {
+  await clickStartButtonIfPresent_(page);
+
   for (const answer of answers) {
     await answerQuestion_(page, answer);
   }
+}
+
+async function clickStartButtonIfPresent_(page) {
+  const button = page.getByRole('button', { name: START_BUTTON_PATTERN }).first();
+  if (await button.count()) {
+    try {
+      await button.click({ timeout: 1000 });
+      await page.waitForLoadState('networkidle').catch(() => undefined);
+      await page.waitForTimeout(300);
+      console.log('Boton inicial detectado y presionado.');
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  const textButton = page.getByText(START_BUTTON_PATTERN).first();
+  if (await textButton.count()) {
+    try {
+      await textButton.click({ timeout: 1000 });
+      await page.waitForLoadState('networkidle').catch(() => undefined);
+      await page.waitForTimeout(300);
+      console.log('Texto de inicio detectado y presionado.');
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  return false;
 }
 
 async function answerQuestion_(page, answer) {

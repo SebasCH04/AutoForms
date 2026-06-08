@@ -334,6 +334,8 @@ Esto:
 
 Este modo es bueno para probar el día antes o unos minutos antes.
 
+Si Microsoft Forms muestra primero una pantalla con un botón como `Start survey`, `Start now`, `Begin`, `Comenzar`, `Empezar` o `Iniciar`, AutoForms intenta presionarlo automáticamente antes de buscar las preguntas.
+
 ## 12. Esperar y enviar automáticamente
 
 Si ya probaste que todo funciona:
